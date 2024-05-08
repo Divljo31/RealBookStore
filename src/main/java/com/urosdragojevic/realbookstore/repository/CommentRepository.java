@@ -4,6 +4,7 @@ import com.urosdragojevic.realbookstore.domain.Comment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import com.urosdragojevic.realbookstore.audit.AuditLogger;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -14,6 +15,7 @@ import java.util.List;
 public class CommentRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(CommentRepository.class);
+    private static final AuditLogger auditLogger = AuditLogger.getAuditLogger(CommentRepository.class);
 
 
     private DataSource dataSource;
@@ -31,8 +33,15 @@ public class CommentRepository {
             statement.setInt(1, comment.getBookId());
             statement.setInt(2, comment.getUserId());
             statement.setString(3, comment.getComment());
-            statement.executeUpdate();        } catch (SQLException e) {
+            statement.executeUpdate();
+
+            LOG.debug("New comment created for book with id: " + comment.getBookId() +  "by user with id: " + comment.getUserId());
+            auditLogger.audit("New comment added");
+
+        } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while creating a new comment");
+
         }
     }
 
@@ -47,6 +56,8 @@ public class CommentRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while retrieving comments for book with id: " +  bookId);
+
         }
         return commentList;
     }

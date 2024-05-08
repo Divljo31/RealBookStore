@@ -7,6 +7,8 @@ import com.urosdragojevic.realbookstore.domain.NewBook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import com.urosdragojevic.realbookstore.audit.Entity;
+
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -37,6 +39,8 @@ public class BookRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error retrieving all books.");
+
         }
         return bookList;
     }
@@ -54,6 +58,10 @@ public class BookRepository {
             while (rs.next()) {
                 bookList.add(createBookFromResultSet(rs));
             }
+        }catch (SQLException e) {
+            e.printStackTrace();
+            LOG.warn("There was an error while searching for books with search term: " + searchTerm);
+
         }
         return bookList;
     }
@@ -68,6 +76,8 @@ public class BookRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while retrieving book with id: " + bookId);
+
         }
         return null;
     }
@@ -95,11 +105,14 @@ public class BookRepository {
                         statement2.executeUpdate();
                     } catch (SQLException e) {
                         e.printStackTrace();
+                        LOG.error("There was an error while inserting genre for book with id: " +  finalId);
                     }
                 });
+                LOG.info("New book with id " + finalId + " created");
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while creating new book");
         }
         return id;
     }
@@ -118,7 +131,9 @@ public class BookRepository {
             statement.executeUpdate(query4);
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while deleting book with id: " + bookId);
         }
+        auditLogger.audit("Book with id" + bookId + "deleted");
     }
 
     private Book createBookFromResultSet(ResultSet rs) throws SQLException {
