@@ -37,6 +37,8 @@ public class RoleRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while retrieving roles for user with id: " + userId);
+
         }
         return roles;
     }

@@ -4,6 +4,8 @@ import com.urosdragojevic.realbookstore.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import com.urosdragojevic.realbookstore.audit.AuditLogger;
+
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -15,6 +17,8 @@ import java.sql.Statement;
 public class UserRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserRepository.class);
+    private static final AuditLogger auditLogger = AuditLogger.getAuditLogger(UserRepository.class);
+
 
     private DataSource dataSource;
 
@@ -35,6 +39,8 @@ public class UserRepository {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while retrieving user: " + username);
+
         }
         return null;
     }
@@ -57,8 +63,14 @@ public class UserRepository {
              Statement statement = connection.createStatement();
         ) {
             statement.executeUpdate(query);
+            LOG.info("User deleted with id: {}", userId);
+            auditLogger.audit("Deleted user with id: " + userId);
+
+
         } catch (SQLException e) {
             e.printStackTrace();
+            LOG.error("There was an error while deleting user with id: " +  userId);
+
         }
     }
 }
